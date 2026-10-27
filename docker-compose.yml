@@ -1,0 +1,14 @@
+# Local MongoDB for development:  npm run db:up   (or: docker compose up -d mongo)
+# Data persists in the "mongo-data" volume. Remove it with: docker compose down -v
+services:
+  mongo:
+    image: mongo:8
+    container_name: merch-store-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo-data:

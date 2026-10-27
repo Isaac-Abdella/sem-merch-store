@@ -1,0 +1,21 @@
+{
+  "name": "merch-store",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MERN merch store starter: auth with a 25 km Toronto geofence, Stripe payments, live delivery tracking on a map.",
+  "scripts": {
+    "setup": "node scripts/setup.js && npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently -n api,web -c red,blue \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "seed": "npm run seed --prefix server",
+    "test": "npm test --prefix server",
+    "build": "npm run build --prefix client",
+    "db:up": "docker compose up -d mongo",
+    "db:down": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
