@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -9,7 +10,20 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 const app = express();
 
 app.set('trust proxy', 1); // correct client IPs behind Render/Heroku/Nginx (needed by the rate limiter)
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        // Stripe Elements loads its script and card iframes from Stripe's domains.
+        scriptSrc: ["'self'", 'https://js.stripe.com'],
+        frameSrc: ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
+        connectSrc: ["'self'", 'https://api.stripe.com'],
+        // Map tiles and product images come from third-party hosts (OSM, picsum, admin-entered URLs).
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      },
+    },
+  })
+);
 app.use(
   cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -32,6 +46,17 @@ app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/tracking', require('./routes/trackingRoutes'));
 app.use('/api/service-area', require('./routes/serviceAreaRoutes'));
+
+// In production the API also serves the built React app, so everything shares one origin
+// (the auth cookie and Socket.io then work without any CORS or SameSite changes).
+if (process.env.NODE_ENV === 'production') {
+  const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
+  app.use(express.static(clientDist));
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' || req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 app.use(notFound);
 app.use(errorHandler);

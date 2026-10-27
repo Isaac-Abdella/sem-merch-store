@@ -1,0 +1,39 @@
+# Render Blueprint: one web service that builds the React client and serves it from the Express API.
+# Deploy: Render dashboard → New → Blueprint → pick this repo. Values marked sync: false are prompted for.
+services:
+  - type: web
+    name: sem-merch-store
+    runtime: node
+    plan: free
+    region: ohio
+    buildCommand: npm ci --prefix server --omit=dev && npm ci --prefix client --include=dev && npm run build --prefix client
+    startCommand: npm start --prefix server
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CLIENT_URL
+        sync: false
+      - key: STRICT_LOGIN_GEOFENCE
+        value: "false"
+      - key: GEOCODER
+        value: nominatim
+      - key: GEOCODER_USER_AGENT
+        sync: false
+      - key: PAYMENT_PROVIDER
+        value: stripe
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      # Read by Vite at build time, so it must be set before the build runs.
+      - key: VITE_STRIPE_PUBLISHABLE_KEY
+        sync: false
