@@ -10,6 +10,7 @@ function serializeShipment(shipment) {
   return {
     carrier: shipment.carrier,
     trackingNumber: shipment.trackingNumber,
+    trackingUrl: shipment.trackingUrl,
     driver: shipment.driver?.name ? { name: shipment.driver.name } : null,
     origin: fromGeoJSONPoint(shipment.origin),
     destination: fromGeoJSONPoint(shipment.destination),

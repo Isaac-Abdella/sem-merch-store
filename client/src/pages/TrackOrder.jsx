@@ -76,6 +76,12 @@ export default function TrackOrder() {
             {order.shippingAddress.city}, {order.shippingAddress.province} {order.shippingAddress.postalCode}
           </p>
           {shipment?.driver && <p className="muted">Driver: {shipment.driver.name}</p>}
+          {shipment?.trackingUrl && (
+            <p><a href={shipment.trackingUrl} target="_blank" rel="noreferrer">Open Uber courier tracking</a></p>
+          )}
+          {shipment?.carrier === 'canada_post' && shipment.trackingNumber && (
+            <p className="muted">Canada Post tracking: {shipment.trackingNumber}</p>
+          )}
           {shipment?.lastLocationAt && (
             <p className="muted small">Last update {new Date(shipment.lastLocationAt).toLocaleTimeString('en-CA')}</p>
           )}

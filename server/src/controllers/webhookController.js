@@ -9,6 +9,7 @@
 const { constructStripeEvent } = require('../services/paymentService');
 const { markOrderPaid, markOrderFailed } = require('../services/orderService');
 const { emitTrackingUpdate } = require('../sockets/tracking');
+const uberDirect = require('../services/uberDirectService');
 
 async function handleStripeWebhook(req, res) {
   // req.body is a Buffer here because this route uses express.raw()
@@ -39,4 +40,28 @@ async function handleStripeWebhook(req, res) {
   res.json({ received: true });
 }
 
-module.exports = { handleStripeWebhook };
+/**
+ * POST /api/webhooks/uber-direct
+ * Add this URL in the Uber Direct dashboard → Developer → Webhooks (delivery status + courier update),
+ * then copy the signing key into UBER_WEBHOOK_SIGNING_KEY.
+ */
+async function handleUberDirectWebhook(req, res) {
+  if (!uberDirect.verifyWebhookSignature(req.body, req.headers)) {
+    return res.status(401).json({ message: 'Invalid signature' });
+  }
+  let event;
+  try {
+    event = JSON.parse(req.body.toString('utf8'));
+  } catch {
+    return res.status(400).json({ message: 'Invalid JSON' });
+  }
+  try {
+    await uberDirect.applyWebhookEvent(event);
+  } catch (err) {
+    console.error('Uber webhook:', err.message);
+    return res.status(500).json({ message: 'Temporary error' }); // 5xx → Uber retries
+  }
+  res.json({ received: true });
+}
+
+module.exports = { handleUberDirectWebhook, handleStripeWebhook };

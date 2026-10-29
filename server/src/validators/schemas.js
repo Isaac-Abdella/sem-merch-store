@@ -78,6 +78,20 @@ const checkOptions = ({ requirePrice }) => (p, ctx) => {
 const product = productFields.superRefine(checkOptions({ requirePrice: true }));
 const productUpdate = productFields.partial().superRefine(checkOptions({ requirePrice: false }));
 
+// Optional SMS updates at checkout. The phone is normalized to E.164 here.
+const { toE164 } = require('../utils/phone');
+const contact = z
+  .object({
+    phone: z.string().trim().max(30).optional(),
+    smsOptIn: z.boolean().default(false),
+  })
+  .superRefine((c, ctx) => {
+    if ((c.smsOptIn || c.phone) && !toE164(c.phone)) {
+      ctx.addIssue({ code: 'custom', path: ['phone'], message: 'Enter a 10-digit Canadian mobile number' });
+    }
+  })
+  .transform((c) => ({ phone: toE164(c.phone) || undefined, smsOptIn: c.smsOptIn }));
+
 const createPaymentIntent = z.object({
   items: z
     .array(
@@ -89,6 +103,7 @@ const createPaymentIntent = z.object({
     )
     .min(1, 'Cart is empty'),
   shippingAddress: address,
+  contact: contact.optional(),
 });
 
 const updateOrderStatus = z.object({
@@ -97,6 +112,12 @@ const updateOrderStatus = z.object({
 });
 
 const assignDriver = z.object({ driverEmail: z.email() });
+
+// Admin attaches a Canada Post tracking number (PIN) to an order's shipment
+const carrierTracking = z.object({
+  carrier: z.enum(['local', 'canada_post']),
+  trackingNumber: z.string().trim().regex(/^[A-Za-z0-9]{8,30}$/, 'Enter a valid tracking number').optional(),
+}).refine((v) => v.carrier === 'local' || v.trackingNumber, { path: ['trackingNumber'], message: 'Tracking number is required' });
 
 const driverStatus = z.object({
   status: z.enum(['shipped', 'out_for_delivery', 'delivered']),
@@ -116,5 +137,7 @@ module.exports = {
   updateOrderStatus,
   assignDriver,
   driverStatus,
+  contact,
+  carrierTracking,
   serviceAreaCheck: z.object({ address }),
 };

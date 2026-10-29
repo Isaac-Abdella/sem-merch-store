@@ -8,6 +8,7 @@ import { confirmMockPayment, createPaymentIntent } from '../api/payments';
 import { getErrorData, getErrorMessage, getFieldErrors } from '../api/axios';
 import AddressForm, { emptyAddress } from '../components/checkout/AddressForm';
 import PaymentForm from '../components/checkout/PaymentForm';
+import SmsOptIn, { emptySmsContact } from '../components/checkout/SmsOptIn';
 import CartSummary, { estimateTotals } from '../components/cart/CartSummary';
 import { formatCurrency } from '../utils/formatCurrency';
 
@@ -23,6 +24,7 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   const [address, setAddress] = useState(() => pickAddress(user?.address));
+  const [contact, setContact] = useState(emptySmsContact);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -41,7 +43,8 @@ export default function Checkout() {
     try {
       const data = await createPaymentIntent(
         items.map((i) => ({ productId: i.productId, quantity: i.quantity, variantId: i.variantId })),
-        address
+        address,
+        contact.phone.trim() ? contact : undefined
       );
       setIntent(data);
     } catch (err) {
@@ -79,6 +82,7 @@ export default function Checkout() {
         {!intent ? (
           <form onSubmit={handleContinue}>
             <AddressForm value={address} onChange={setAddress} errors={fieldErrors} />
+            <SmsOptIn value={contact} onChange={setContact} errors={fieldErrors} />
             <p className="muted small">We deliver within 25 km of downtown Toronto. We'll confirm your address on the next step.</p>
             <button type="submit" className="btn btn--primary" disabled={busy}>
               {busy ? 'Checking address…' : 'Continue to payment'}
