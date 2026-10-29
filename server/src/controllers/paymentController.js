@@ -54,7 +54,9 @@ async function createPaymentIntent(req, res) {
     ...totals,
     shippingAddress: { ...shippingAddress, location: toGeoJSONPoint(req.geo) },
     distanceKm: req.geo.distanceKm,
-    ...(contact?.smsOptIn && { contact: { phone: contact.phone, smsOptIn: true, smsConsentAt: new Date() } }),
+    ...(contact?.phone && {
+      contact: { phone: contact.phone, smsOptIn: contact.smsOptIn, ...(contact.smsOptIn && { smsConsentAt: new Date() }) },
+    }),
     statusHistory: [{ status: 'pending', note: 'Order created, awaiting payment' }],
   });
 

@@ -86,7 +86,7 @@ const contact = z
     smsOptIn: z.boolean().default(false),
   })
   .superRefine((c, ctx) => {
-    if (c.smsOptIn && !toE164(c.phone)) {
+    if ((c.smsOptIn || c.phone) && !toE164(c.phone)) {
       ctx.addIssue({ code: 'custom', path: ['phone'], message: 'Enter a 10-digit Canadian mobile number' });
     }
   })

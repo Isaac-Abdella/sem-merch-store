@@ -87,6 +87,7 @@ describe('SMS updates and Canada Post tracking', () => {
     await settle();
     const last = sentInMock.at(-1);
     assert.match(last.body, /has shipped/);
+    assert.match(last.body, /Tracking: 1234567890123456/);
   });
 
   test('customers cannot set carrier tracking', async () => {

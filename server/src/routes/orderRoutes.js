@@ -12,6 +12,8 @@ router.get('/mine', ctrl.getMyOrders);
 router.get('/', requireAdmin, ctrl.getAllOrders);
 router.get('/:id', ctrl.getOrderById);
 router.patch('/:id/status', requireAdmin, validate(schemas.updateOrderStatus), ctrl.updateOrderStatus);
+router.post('/:id/uber-direct', requireAdmin, ctrl.dispatchUberDirect);
+router.delete('/:id/uber-direct', requireAdmin, ctrl.cancelUberDirect);
 router.patch('/:id/carrier', requireAdmin, validate(schemas.carrierTracking), ctrl.setCarrierTracking);
 router.patch('/:id/assign-driver', requireAdmin, validate(schemas.assignDriver), ctrl.assignDriver);
 

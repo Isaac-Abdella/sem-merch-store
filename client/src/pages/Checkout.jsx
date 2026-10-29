@@ -44,7 +44,7 @@ export default function Checkout() {
       const data = await createPaymentIntent(
         items.map((i) => ({ productId: i.productId, quantity: i.quantity, variantId: i.variantId })),
         address,
-        contact.smsOptIn ? contact : undefined
+        contact.phone.trim() ? contact : undefined
       );
       setIntent(data);
     } catch (err) {

@@ -204,3 +204,4 @@ legend { font-weight: 700; margin-bottom: 8px; }
 .sms-opt-in { margin-top: 4px; }
 .checkbox-label { flex-direction: row; align-items: flex-start; gap: 10px; font-weight: 400; }
 .checkbox-label input { margin-top: 3px; flex: 0 0 auto; }
+.carrier-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }

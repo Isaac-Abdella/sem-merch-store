@@ -7,6 +7,8 @@ export const getOrder = (id) => api.get(`/orders/${id}`).then((r) => r.data.orde
 export const getAllOrders = (params = {}) => api.get('/orders', { params }).then((r) => r.data.orders);
 export const updateOrderStatus = (id, status, note) =>
   api.patch(`/orders/${id}/status`, { status, note }).then((r) => r.data.order);
+export const dispatchUberDirect = (id) => api.post(`/orders/${id}/uber-direct`).then((r) => r.data);
+export const cancelUberDirect = (id) => api.delete(`/orders/${id}/uber-direct`).then((r) => r.data);
 export const setCarrierTracking = (id, carrier, trackingNumber) =>
   api.patch(`/orders/${id}/carrier`, { carrier, trackingNumber }).then((r) => r.data);
 export const assignDriver = (id, driverEmail) =>

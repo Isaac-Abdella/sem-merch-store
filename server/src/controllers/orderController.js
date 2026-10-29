@@ -6,6 +6,7 @@ const { canViewOrder } = require('../utils/permissions');
 const { emitTrackingUpdate } = require('../sockets/tracking');
 const { fetchCarrierTracking } = require('../services/shippingService');
 const { canadaPostConfig } = require('../config/canadaPost');
+const uberDirect = require('../services/uberDirectService');
 
 // GET /api/orders/mine
 async function getMyOrders(req, res) {
@@ -36,6 +37,9 @@ async function getAllOrders(req, res) {
       driver: byOrder.get(o._id.toString())?.driver || null,
       carrier: byOrder.get(o._id.toString())?.carrier || 'local',
       trackingNumber: byOrder.get(o._id.toString())?.trackingNumber || null,
+      trackingUrl: byOrder.get(o._id.toString())?.trackingUrl || null,
+      carrierStatus: byOrder.get(o._id.toString())?.carrierStatus || null,
+      carrierFee: byOrder.get(o._id.toString())?.carrierFee ?? null,
     })),
   });
 }
@@ -89,4 +93,24 @@ async function setCarrierTracking(req, res) {
   res.json({ shipment, order: { _id: order._id, status: order.status }, tracking });
 }
 
-module.exports = { getMyOrders, getOrderById, getAllOrders, updateOrderStatus, assignDriver, setCarrierTracking };
+// POST /api/orders/:id/uber-direct   (admin) — quote + request an Uber courier
+async function dispatchUberDirect(req, res) {
+  const { shipment, order, quote, alreadyDispatched } = await uberDirect.dispatchOrder(req.params.id);
+  res.status(alreadyDispatched ? 200 : 201).json({
+    order: { _id: order._id, status: order.status },
+    delivery: { id: shipment.trackingNumber, status: shipment.carrierStatus, fee: shipment.carrierFee, trackingUrl: shipment.trackingUrl },
+    quote: quote ? { id: quote.id, fee: quote.fee, currency: quote.currency } : null,
+    alreadyDispatched: Boolean(alreadyDispatched),
+  });
+}
+
+// DELETE /api/orders/:id/uber-direct   (admin) — cancel the Uber courier
+async function cancelUberDirect(req, res) {
+  const shipment = await uberDirect.cancelDelivery(req.params.id);
+  res.json({ delivery: { id: shipment.trackingNumber, status: shipment.carrierStatus } });
+}
+
+module.exports = {
+  getMyOrders, getOrderById, getAllOrders, updateOrderStatus, assignDriver, setCarrierTracking,
+  dispatchUberDirect, cancelUberDirect,
+};

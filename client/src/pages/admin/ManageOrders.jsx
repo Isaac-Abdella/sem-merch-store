@@ -64,7 +64,7 @@ export default function ManageOrders() {
       <div className="table-wrap">
         <table className="table">
           <thead>
-            <tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Driver</th><th>Canada Post</th><th /></tr>
+            <tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Driver</th><th>Courier / carrier</th><th /></tr>
           </thead>
           <tbody>
             {orders.map((o) => (

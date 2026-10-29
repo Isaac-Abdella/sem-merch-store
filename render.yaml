@@ -44,6 +44,28 @@ services:
         sync: false
       - key: TWILIO_FROM_NUMBER
         sync: false
+      - key: UBER_DIRECT_ENABLED
+        value: "false"
+      - key: UBER_DIRECT_MODE
+        value: live
+      - key: UBER_CUSTOMER_ID
+        sync: false
+      - key: UBER_CLIENT_ID
+        sync: false
+      - key: UBER_CLIENT_SECRET
+        sync: false
+      - key: UBER_WEBHOOK_SIGNING_KEY
+        sync: false
+      - key: UBER_PICKUP_PHONE
+        sync: false
+      - key: UBER_PICKUP_LINE1
+        sync: false
+      - key: UBER_PICKUP_POSTAL_CODE
+        sync: false
+      - key: UBER_PICKUP_LAT
+        sync: false
+      - key: UBER_PICKUP_LNG
+        sync: false
       - key: CANADA_POST_ENABLED
         value: "false"
       - key: CP_TOKEN_URL
