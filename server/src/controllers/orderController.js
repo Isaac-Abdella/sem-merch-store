@@ -4,6 +4,8 @@ const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const { canViewOrder } = require('../utils/permissions');
 const { emitTrackingUpdate } = require('../sockets/tracking');
+const { fetchCarrierTracking } = require('../services/shippingService');
+const { canadaPostConfig } = require('../config/canadaPost');
 
 // GET /api/orders/mine
 async function getMyOrders(req, res) {
@@ -32,6 +34,8 @@ async function getAllOrders(req, res) {
     orders: orders.map((o) => ({
       ...o.toJSON(),
       driver: byOrder.get(o._id.toString())?.driver || null,
+      carrier: byOrder.get(o._id.toString())?.carrier || 'local',
+      trackingNumber: byOrder.get(o._id.toString())?.trackingNumber || null,
     })),
   });
 }
@@ -60,4 +64,29 @@ async function assignDriver(req, res) {
   res.json({ shipment, driver: { _id: driver._id, name: driver.name, email: driver.email } });
 }
 
-module.exports = { getMyOrders, getOrderById, getAllOrders, updateOrderStatus, assignDriver };
+// PATCH /api/orders/:id/carrier   (admin)   Body: { carrier: 'canada_post', trackingNumber }
+// Hand an order to Canada Post: saves the PIN, marks it shipped (texts the customer) and checks tracking once.
+async function setCarrierTracking(req, res) {
+  const order = await Order.findById(req.params.id);
+  if (!order) throw new AppError('Order not found', 404);
+  const shipment = await Shipment.findOne({ order: order._id });
+  if (!shipment) throw new AppError('This order has no shipment yet (is it paid?)', 400);
+
+  shipment.carrier = req.body.carrier;
+  shipment.trackingNumber = req.body.carrier === 'local' ? undefined : req.body.trackingNumber.toUpperCase();
+  await shipment.save();
+
+  if (shipment.carrier !== 'local' && order.status === 'processing') {
+    order.setStatus('shipped', `Handed to Canada Post (${shipment.trackingNumber})`);
+    await order.save();
+    emitTrackingUpdate(order._id, { status: order.status, at: new Date() });
+  }
+
+  let tracking = null;
+  if (shipment.carrier === 'canada_post' && canadaPostConfig().enabled) {
+    tracking = await fetchCarrierTracking(shipment).catch((err) => ({ error: err.message }));
+  }
+  res.json({ shipment, order: { _id: order._id, status: order.status }, tracking });
+}
+
+module.exports = { getMyOrders, getOrderById, getAllOrders, updateOrderStatus, assignDriver, setCarrierTracking };

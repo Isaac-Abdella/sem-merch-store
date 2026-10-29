@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { assignDriver, getAllOrders, updateOrderStatus } from '../../api/orders';
+import CarrierTrackingForm from '../../components/admin/CarrierTrackingForm';
 import { getErrorMessage } from '../../api/axios';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { ORDER_STATUSES, STATUS_LABELS, shortId } from '../../utils/orderStatus';
@@ -63,7 +64,7 @@ export default function ManageOrders() {
       <div className="table-wrap">
         <table className="table">
           <thead>
-            <tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Driver</th><th /></tr>
+            <tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Driver</th><th>Canada Post</th><th /></tr>
           </thead>
           <tbody>
             {orders.map((o) => (
@@ -98,6 +99,13 @@ export default function ManageOrders() {
                   ) : (
                     <span className="muted">—</span>
                   )}
+                </td>
+                <td>
+                  <CarrierTrackingForm
+                    order={o}
+                    onSaved={(text) => { setMessage(text); load(); }}
+                    onError={setMessage}
+                  />
                 </td>
                 <td>{o.paymentStatus === 'paid' && <Link to={`/orders/${o._id}/track`}>Track</Link>}</td>
               </tr>

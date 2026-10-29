@@ -4,6 +4,7 @@ const http = require('http');
 const app = require('./app');
 const { connectDB } = require('./config/db');
 const { initSockets } = require('./sockets/tracking');
+const { startCarrierTrackingPoller } = require('./jobs/carrierTrackingPoller');
 
 const REQUIRED_ENV = ['MONGO_URI', 'JWT_SECRET'];
 const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
@@ -18,9 +19,10 @@ async function start() {
   await connectDB();
   const server = http.createServer(app);
   initSockets(server);
+  startCarrierTrackingPoller(); // no-op unless CANADA_POST_ENABLED=true and CARRIER_POLL_MINUTES>0
   server.listen(PORT, () => {
     console.log(`API listening on http://localhost:${PORT}`);
-    console.log(`Geocoder: ${process.env.GEOCODER || 'mock'} | Payments: ${process.env.PAYMENT_PROVIDER || 'auto'}`);
+    console.log(`Geocoder: ${process.env.GEOCODER || 'mock'} | Payments: ${process.env.PAYMENT_PROVIDER || 'auto'} | SMS: ${process.env.SMS_PROVIDER || 'mock'}`);
   });
 
   const shutdown = (signal) => {

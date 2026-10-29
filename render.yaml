@@ -34,6 +34,39 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
+      - key: STORE_NAME
+        value: SEM Merch
+      - key: SMS_PROVIDER
+        value: twilio
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
+      - key: CANADA_POST_ENABLED
+        value: "false"
+      - key: CP_TOKEN_URL
+        sync: false
+      - key: CP_TOKEN_SCOPE
+        sync: false
+      - key: CP_API_KEY
+        sync: false
+      - key: CP_API_SECRET
+        sync: false
+      # Free web services sleep when idle, so in-process polling is unreliable there.
+      # Prefer the cron job below (paid) or set this > 0 on an always-on instance.
+      - key: CARRIER_POLL_MINUTES
+        value: "0"
       # Read by Vite at build time, so it must be set before the build runs.
       - key: VITE_STRIPE_PUBLISHABLE_KEY
         sync: false
+
+  # Optional (paid): checks Canada Post tracking every 30 minutes and texts customers on changes.
+  # Uncomment after CANADA_POST_ENABLED=true. Copy MONGO_URI, Twilio and CP_* values into it too.
+  # - type: cron
+  #   name: sem-merch-carrier-poll
+  #   runtime: node
+  #   schedule: "*/30 * * * *"
+  #   buildCommand: npm ci --prefix server --omit=dev
+  #   startCommand: npm run poll:carriers --prefix server

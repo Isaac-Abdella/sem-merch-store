@@ -12,6 +12,7 @@ router.get('/mine', ctrl.getMyOrders);
 router.get('/', requireAdmin, ctrl.getAllOrders);
 router.get('/:id', ctrl.getOrderById);
 router.patch('/:id/status', requireAdmin, validate(schemas.updateOrderStatus), ctrl.updateOrderStatus);
+router.patch('/:id/carrier', requireAdmin, validate(schemas.carrierTracking), ctrl.setCarrierTracking);
 router.patch('/:id/assign-driver', requireAdmin, validate(schemas.assignDriver), ctrl.assignDriver);
 
 module.exports = router;

@@ -26,6 +26,18 @@ const statusEventSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// SMS consent is stored per order (CASL: record what they agreed to and when)
+const contactSchema = new mongoose.Schema(
+  {
+    phone: String, // E.164, e.g. +14165550123
+    smsOptIn: { type: Boolean, default: false },
+    smsConsentAt: Date,
+    smsOptOutAt: Date, // set when they reply STOP (see webhook) or opt out in their account
+    smsSent: { type: [String], default: [] }, // statuses/notices already texted, prevents duplicates
+  },
+  { _id: false }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
@@ -37,6 +49,7 @@ const orderSchema = new mongoose.Schema(
     currency: { type: String, default: 'cad' },
     shippingAddress: addressSchema,
     distanceKm: Number, // from the store's service-area center
+    contact: contactSchema,
 
     paymentProvider: { type: String, enum: ['stripe', 'mock'] },
     paymentIntentId: { type: String, index: true },
@@ -53,6 +66,18 @@ orderSchema.methods.setStatus = function setStatus(status, note) {
   this.status = status;
   this.statusHistory.push({ status, note });
 };
+
+// Text the customer whenever the status changes, no matter who changed it (admin, driver, carrier poller).
+orderSchema.pre('save', function rememberStatusChange() {
+  this.$locals.statusChanged = this.isModified('status') && !this.isNew;
+});
+orderSchema.post('save', function textOnStatusChange(doc) {
+  if (!doc.$locals.statusChanged) return;
+  doc.$locals.statusChanged = false;
+  // Lazy require avoids a circular import (notificationService also uses this model).
+  const { notifyStatus } = require('../services/notificationService');
+  notifyStatus(doc); // fire-and-forget; it logs its own errors
+});
 
 module.exports = mongoose.model('Order', orderSchema);
 module.exports.ORDER_STATUSES = ORDER_STATUSES;

@@ -14,7 +14,7 @@ const { emitTrackingUpdate } = require('../sockets/tracking');
  * Prices ALWAYS come from the database — the client only says what and how many.
  */
 async function createPaymentIntent(req, res) {
-  const { items, shippingAddress } = req.body;
+  const { items, shippingAddress, contact } = req.body;
 
   const ids = [...new Set(items.map((i) => i.productId))];
   const products = await Product.find({ _id: { $in: ids }, active: true });
@@ -54,6 +54,7 @@ async function createPaymentIntent(req, res) {
     ...totals,
     shippingAddress: { ...shippingAddress, location: toGeoJSONPoint(req.geo) },
     distanceKm: req.geo.distanceKm,
+    ...(contact?.smsOptIn && { contact: { phone: contact.phone, smsOptIn: true, smsConsentAt: new Date() } }),
     statusHistory: [{ status: 'pending', note: 'Order created, awaiting payment' }],
   });
 

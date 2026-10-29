@@ -8,7 +8,17 @@ const shipmentSchema = new mongoose.Schema(
     order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true, unique: true },
     // "local" = your own drivers posting GPS; otherwise a carrier with a tracking number
     carrier: { type: String, enum: ['local', 'canada_post', 'purolator', 'ups', 'fedex'], default: 'local' },
-    trackingNumber: String,
+    trackingNumber: { type: String, index: true },
+    // Latest Canada Post scan we've seen, so the poller only acts on new events
+    lastCarrierEvent: {
+      _id: false,
+      code: String,
+      type: { type: String }, // "type" is a reserved key in Mongoose, so it needs the long form
+      description: String,
+      date: String,
+      location: String,
+      checkedAt: Date,
+    },
     driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
     origin: pointSchema,
     destination: pointSchema,

@@ -9,6 +9,7 @@
     "start": "node src/server.js",
     "seed": "node seed/seedProducts.js",
     "migrate:variants": "node seed/migrateSizesToVariants.js",
+    "poll:carriers": "node scripts/pollCarrierTracking.js",
     "test": "node --require ./tests/setupEnv.js --test --test-reporter=spec --test-concurrency=1 \"tests/**/*.test.js\"",
     "test:unit": "node --require ./tests/setupEnv.js --test --test-reporter=spec \"tests/unit/*.test.js\"",
     "test:integration": "node --require ./tests/setupEnv.js --test --test-reporter=spec \"tests/integration/*.test.js\""
